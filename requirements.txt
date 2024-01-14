@@ -1,0 +1,7 @@
+opencv-python
+kafka
+flask
+scikit-image
+tensorflow
+config
+Pillow
