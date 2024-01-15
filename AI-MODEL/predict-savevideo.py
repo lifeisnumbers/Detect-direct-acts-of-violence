@@ -65,8 +65,10 @@ for message in consumer:
             print(kq)
             print(frames.shape)
             i+=1
-        print(kq)
-        print(frames)
+        if kq==True:
+            print(kq)
+        # print(kq)
+        # print(frames)
         # if kq: 
         #         # producer.send(out_video_topic_name, frames.tobytes())
         #         producer.send( out_topic_name , kq)#.encode("utf-8"))
