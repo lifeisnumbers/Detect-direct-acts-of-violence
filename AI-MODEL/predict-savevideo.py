@@ -1,5 +1,6 @@
 import cv2
 from PIL import Image
+from skimage.transform import resize
 import numpy as np
 from kafka import KafkaConsumer, KafkaProducer
 from model import *
@@ -37,36 +38,38 @@ i = 0
 for message in consumer:
     stream = message.value
     #chuyển thành hình ảnh
-
     image = cv2.imdecode(np.frombuffer(stream, dtype=np.uint8), cv2.IMREAD_COLOR)
-    print(image.shape)
 
     # cv2.putText(image, "PROCESSED", (100,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255),2)
     # print("Send to kafka")
     ret, frame = cv2.imencode('.jpg', image)
     # print(frame)
-    if ret:   
-        frm = resize(frame,(160,160,3))
+    # print(frame)
+
+    
+    if ret:  
+        frm = resize(image,(160,160,3))
         frm = np.expand_dims(frm,axis=0)
         if(np.max(frm)>1):
             frm = frm/255.0
-            print(frm)
-    while True:
-        if i < 30:
-            frames[i][:] = frm
-            nodatav[0][:][:] = frames
-            kq, percent = pred_fight(model, nodatav, acuracy=0.6)
-            i+=1
-        elif i == 29:
-            frames = np.delete(frames,0,axis=0)
-            frames[i][:] = frm         
-            nodatav[0][:][:] = frames
-            kq, percent = pred_fight(model, frames, acuracy=0.6)
+                
+        frames[i][:] = frm
+        nodatav[0][:][:] = frames
+        i+=1
+        # print(i)
+        if i == 30:
+            kq, percent = pred_fight(model, nodatav, acuracy=0.9)
+            i=0
             print(kq)
-            print(frames.shape)
-            i+=1
-        if kq==True:
-            print(kq)
+            # if percent > 0.8:
+            #     jpg_data = frame.tobytes()
+            #     with open('output_frame.jpg', 'wb') as file:
+            #         file.write(jpg_data)
+            print("percent")
+            print(percent)
+        
+                
+                
         # print(kq)
         # print(frames)
         # if kq: 
