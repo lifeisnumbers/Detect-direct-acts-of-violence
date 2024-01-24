@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fight Detection Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f4f5;
+            margin: 0;
+        }
+
+        h1 {
+            color: #333;
+            margin: 0;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 10;
+            background-color: #fff;
+            padding: 16px 0;
+            box-shadow: 0px 0px 9px -3px #888888;
+            padding-left: 32px;
+        }
+
+        .container {
+            padding: 0 32px;
+            margin-top: 48px;
+        }
+
+        .content {
+            margin-top: 48px;
+        }
+
+        .content-videos {
+            display: flex;
+            margin-top: 64px;
+        }
+
+        .videos {
+            border-radius: 12px;
+            /* background-color: green; */
+        }
+
+        #containerVideo {
+
+
+            padding: 4px;
+
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .warning {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0px 1px 3px gray;
+            cursor: pointer;
+            min-width: 640px;
+        }
+
+        #video-container {
+            margin-right: 40px;
+            position: fixed;
+
+        }
+
+        .video-feed {
+
+            padding: 4px;
+
+        }
+
+        .frame-container {
+
+            margin-left: 50%;
+        }
+
+        .paramaterContainer {
+            display: flex;
+        }
+
+        .parameter {
+            margin: 0;
+            margin-right: 8px;
+        }
+
+        .fa {
+            color: #0194f3;
+        }
+
+        .fa-chevron-up {
+            display: none;
+        }
+
+        .detailVideo {
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+            width: 640px;
+            height: 480px;
+        }
+
+        #alert-frame {}
+
+        #alert-message {
+            margin: 0;
+            font-weight: bold;
+            color: red;
+        }
+    </style>
+    <script>
+        var percent;
+        var selectedVideoIndex = null;
+        const items = [];
+        var consecutiveSamePercentCount = 0;
+        var lastPercent = null;
+        function generateVideoDetails(item, index) {
+            const div = document.createElement('div');
+            div.className = 'detailVideo';
+            div.id = `detailVideo${index}`;
+            div.style.display = 'none'; // Initially hide details
+
+            // Thêm timestamp để tránh caching
+            const timestamp = new Date().getTime();
+
+            div.innerHTML += `
+                <img src="{{ url_for('alert_frame') }}?timestamp=${timestamp}" alt="Video Feed" width="640" height="480" class='videos'>
+            `;
+
+            return div;
+        }
+
+
+        function toggleVideoDetails(index) {
+            const detailVideo = document.getElementById(`detailVideo${index}`);
+
+            if (selectedVideoIndex !== null) {
+                const prevDetailVideo = document.getElementById(`detailVideo${selectedVideoIndex}`);
+                prevDetailVideo.style.display = 'none';
+            }
+
+            if (selectedVideoIndex !== index) {
+                detailVideo.style.display = (detailVideo.style.display === 'none') ? 'block' : 'none';
+                selectedVideoIndex = index;
+            } else {
+                selectedVideoIndex = null;
+            }
+        }
+
+        function updatePage(percent) {
+            console.log("Current Percent:", percent);
+
+            const containerVideo = document.getElementById('containerVideo');
+            const prevDetailVideoStates = [];
+
+            // Preserve the current visibility state of detail videos
+            items.forEach((item, index) => {
+                const detailVideo = document.getElementById(`detailVideo${index}`);
+                prevDetailVideoStates[index] = detailVideo.style.display;
+            });
+
+            // Update the items array based on the percent value
+            if (percent >= 0.9) {
+
+                items.push({ percent: percent, percent_message: "Fight Detected!" });
+            }
+
+            // Clear and update the containerVideo
+            containerVideo.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'warning';
+
+                div.innerHTML += `
+                    <p id="alert-message">${item.percent_message}</p>
+                    <div class='paramaterContainer'>
+                        <p class='parameter'><span id="confidence">${item.percent || 'N/A'}</span></p>
+                        <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                        <i class="fa fa-chevron-up" aria-hidden="true"></i>
+                    </div>
+                `;
+
+                // Add click event to show/hide video details
+                div.addEventListener('click', () => toggleVideoDetails(index));
+
+                containerVideo.appendChild(div);
+                containerVideo.appendChild(generateVideoDetails(item, index));
+
+                // Restore the visibility state of detail videos
+                const detailVideo = document.getElementById(`detailVideo${index}`);
+                detailVideo.style.display = prevDetailVideoStates[index] || 'none';
+            });
+            lastPercent = percent;
+        }
+
+        setInterval(function () {
+            fetch('/percent')
+                .then(response => response.json())
+                .then(data => {
+                    var newPercent = data.percent;
+                    console.log("percent99999: " + newPercent);
+
+
+
+
+
+
+                    if (newPercent >= 0.9 && lastPercent != newPercent) {
+                        updatePage(newPercent);
+                    }
+                });
+        }, 1000);
+
+        window.onload = function () {
+            updatePage(percent);
+        }
+    </script>
+</head>
+
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Fight Detection Dashboard</h1>
+        </div>
+
+        <div class='content'>
+            <!-- <p>Current Fight Detection Confidence: <span id="confidence">{{ percent|default("N/A") }}</span></p> -->
+            <div class='content-videos'>
+                <div id="video-container">
+                    <h2>Video Feed</h2>
+                    <div class='video-feed'><img src="{{ url_for('video_feed') }}" alt="Video Feed" width="640"
+                            height="480" class='videos'></div>
+
+                </div>
+                <div class='frame-container'>
+                    <div id="alert-frame">
+                        <h2>Alert Frame</h2>
+
+                        <div id="containerVideo"></div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

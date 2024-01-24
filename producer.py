@@ -3,7 +3,8 @@ import time
 import cv2
 from kafka import KafkaProducer
 
-topic = "distributed-video1"
+topic = "metmoi"
+kafka_ip ='localhost:9092' #Insert kafka ip
 
 def publish_video(video_file):
     """
@@ -13,7 +14,7 @@ def publish_video(video_file):
     :param video_file: path to video file <string>
     """
     # Start up producer
-    producer = KafkaProducer(bootstrap_servers='localhost:9092')
+    producer = KafkaProducer(bootstrap_servers=kafka_ip)
 
     # Open file
     video = cv2.VideoCapture(video_file)
