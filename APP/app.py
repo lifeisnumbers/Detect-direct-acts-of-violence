@@ -10,9 +10,8 @@ from skimage.transform import resize
 import time 
 app = Flask(__name__)
 
-in_topic_name = "test279"
-kafka_ip = 'localhost:9092'  # Thay đổi địa chỉ IP của Kafka nếu cần
-
+in_topic_name = "video501"
+kafka_ip ='localhost:9092'  # Thay đổi địa chỉ IP của Kafka nếu cần
 consumer = KafkaConsumer(
     in_topic_name,
     bootstrap_servers=kafka_ip,
@@ -96,7 +95,7 @@ def generate_alert_frame():
     if frame is not None:
         _, buffer = cv2.imencode('.jpg', frame)
 
-        alert_folder = "C:\\Users\\84328\\Finall\\kafa\\AI-MODEL\\static\\output"
+        alert_folder = "static\\output"
 
         if not os.path.exists(alert_folder):
             os.makedirs(alert_folder)
