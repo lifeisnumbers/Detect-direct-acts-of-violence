@@ -10,7 +10,7 @@ import os
 from PIL import Image
 from io import BytesIO
 import time
-def mamon_videoFightModel2(tf,wight='mamonbest947oscombo-drive.hdfs'):
+def mamon_videoFightModel2(tf,wight='model-cctv-train2.keras'):
     layers = tf.keras.layers
     models = tf.keras.models
     losses = tf.keras.losses
