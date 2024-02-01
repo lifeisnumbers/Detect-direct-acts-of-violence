@@ -3,7 +3,7 @@ import time
 import cv2
 from kafka import KafkaProducer
 
-topic = "metmoi"
+topic = "video501"
 kafka_ip ='localhost:9092' #Insert kafka ip
 
 def publish_video(video_file):
