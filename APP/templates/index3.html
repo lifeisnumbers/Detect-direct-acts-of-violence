@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fight Detection Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="./style.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -148,15 +147,26 @@
             div.id = `detailVideo${index}`;
             div.style.display = 'none'; // Initially hide details
 
-            // Thêm timestamp để tránh caching
-            const timestamp = new Date().getTime();
+            // Create an <img> element
+            const img = document.createElement('img');
 
-            div.innerHTML += `
-                <img src="{{ url_for('alert_frame') }}?timestamp=${timestamp}" alt="Video Feed" width="640" height="480" class='videos'>
-            `;
+            // Replace 'path/to/folder/' with the actual path to the folder containing images
+            const imagePath = `/static/output/alert_frame_${index.toString().padStart(4, '0')}.jpg`;
+
+            // Set the source to the dynamically generated image path
+            img.src = imagePath;
+
+            // Set other attributes if needed (e.g., width, height, alt text)
+            img.setAttribute('width', '640');
+            img.setAttribute('height', '480');
+            img.alt = `Video Thumbnail ${index}`;
+
+            // Append the <img> element to the <div>
+            div.appendChild(img);
 
             return div;
         }
+
 
 
         function toggleVideoDetails(index) {
@@ -170,11 +180,21 @@
             if (selectedVideoIndex !== index) {
                 detailVideo.style.display = (detailVideo.style.display === 'none') ? 'block' : 'none';
                 selectedVideoIndex = index;
+                reloadImageInDetail();
             } else {
                 selectedVideoIndex = null;
             }
         }
+        function reloadImageInDetail() {
+            const detailVideo = document.getElementById(`detailVideo${selectedVideoIndex}`);
+            const imagePath = `/static/output/alert_frame_${index.toString().padStart(4, '0')}.jpg`;
+            // Lấy thẻ img trong video chi tiết
+            const img = detailVideo.querySelector('img');
 
+            // Đổi đường dẫn ảnh để kích thích việc tải lại ảnh
+            // Thay đổi thành đường dẫn mới (có thể là cùng một ảnh) để reload
+            img.src = imagePath; // Thay 'path/to/new/image.jpg' bằng đường dẫn thực tế
+        }
         function updatePage(percent) {
             console.log("Current Percent:", percent);
 
@@ -189,8 +209,17 @@
 
             // Update the items array based on the percent value
             if (percent >= 0.9) {
-
                 items.push({ percent: percent, percent_message: "Fight Detected!" });
+
+                fetch('/generate_alert_frame')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("Alert frame generated:", data);
+                    })
+                    .catch(error => {
+                        console.error("Error generating alert frame:", error);
+                    });
+
             }
 
             // Clear and update the containerVideo
@@ -228,12 +257,6 @@
                 .then(data => {
                     var newPercent = data.percent;
                     console.log("percent99999: " + newPercent);
-
-
-
-
-
-
                     if (newPercent >= 0.9 && lastPercent != newPercent) {
                         updatePage(newPercent);
                     }
@@ -257,8 +280,7 @@
             <div class='content-videos'>
                 <div id="video-container">
                     <h2>Video Feed</h2>
-                    <div class='video-feed'><img src="{{ url_for('video_feed') }}" alt="Video Feed" width="640"
-                            height="480" class='videos'></div>
+                    <img src="{{ url_for('video_feed') }}" alt="Video Feed" width="640" height="480" class='videos'>
 
                 </div>
                 <div class='frame-container'>
